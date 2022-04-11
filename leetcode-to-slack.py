@@ -30,8 +30,8 @@ from random import randrange
 def post_problem(all_problems, difficulty, type):
 
     slug = all_problems[randrange(len(all_problems))]  # choose random problem
-    webhook_url = 'https://hooks.slack.com/services/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'
-    output = { "text": "Today's " + difficulty + " " + type + " problem:" + "https://leetcode.com/problems/" + slug }
+    webhook_url = <Slack Webhook url>
+    output = { "text": "Todays " + str(difficulty) + " " + str(type) + " problem: " + "https://leetcode.com/problems/" + slug }
     # post
     slack_response = requests.post(
         webhook_url, data=json.dumps(output),
@@ -50,19 +50,35 @@ def get_algorithm_problems():
 
     return data
 
-def get_easy_algorithm_problems(problems):
+def get_sorted_algorithm_problems(problems):
     # filter-out premium, medium, and hard problems, get slugs
 
 
     all_easy_algorithm_problems = []
+    all_medium_algorithm_problems = []
+    all_hard_algorithm_problems = []
     for problem in range(len(problems["stat_status_pairs"])):
         difficulty_dict = json.loads(str(problems["stat_status_pairs"][problem]["difficulty"]).replace("'", "\"", 2))
         if (not problems["stat_status_pairs"][problem]["paid_only"]) and difficulty_dict['level'] == 1:
-            #if data # look for easy questions
+            # look for easy questions
             single_problem = problems["stat_status_pairs"][problem]["stat"]["question__title_slug"]
             all_easy_algorithm_problems.append(single_problem)
 
-    return all_easy_algorithm_problems
+        elif (not problems["stat_status_pairs"][problem]["paid_only"]) and difficulty_dict['level'] == 2:
+            # look for medium questions
+            single_problem = problems["stat_status_pairs"][problem]["stat"]["question__title_slug"]
+            all_medium_algorithm_problems.append(single_problem)
 
-all_algorithm_problems = get_algorithm_problems()
-post_problem(get_easy_algorithm_problems(all_algorithm_problems), 'easy', 'algorithm')
+        elif (not problems["stat_status_pairs"][problem]["paid_only"]) and difficulty_dict['level'] == 3:
+            # look for hard questions
+            single_problem = problems["stat_status_pairs"][problem]["stat"]["question__title_slug"]
+            all_hard_algorithm_problems.append(single_problem)
+
+    return all_easy_algorithm_problems, all_medium_algorithm_problems, all_hard_algorithm_problems
+
+easy_algorithms, meduim_algorithms, hard_algorithms = get_sorted_algorithm_problems(get_algorithm_problems())
+
+# post algorithm questions
+post_problem(easy_algorithms, 'easy', 'algorithm')
+post_problem(meduim_algorithms, 'medium', 'algorithm')
+post_problem(meduim_algorithms, 'hard', 'algorithm')
